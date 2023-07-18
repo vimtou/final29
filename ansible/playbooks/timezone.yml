@@ -1,0 +1,9 @@
+- name: TimeLocal
+  hosts: all
+  become: yes
+
+  tasks:
+
+  - name: Set timezone to Europe/Moscow
+    community.general.timezone:
+       name: Europe/Moscow

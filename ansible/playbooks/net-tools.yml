@@ -1,0 +1,10 @@
+- name: net-tools
+  hosts: servers
+  become: yes
+
+  tasks:
+  - name: Install net-tools
+    apt:
+       pkg: net-tools
+       state: present
+

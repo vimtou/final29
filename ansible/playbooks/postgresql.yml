@@ -1,0 +1,46 @@
+- name: Postgresql
+  hosts: elk
+  become: yes
+
+  tasks:
+
+  - name: Create the file repository configuration
+    shell: sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+  - name: Import the repository signing key
+    shell: wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+
+  - name: Update the package lists
+    shell: sudo apt-get update
+
+  - name: Install the latest version of PostgreSQL
+    shell: sudo apt-get -y install postgresql
+
+  - name: Stop service postgresql
+    become: yes
+    service:
+          name: postgresql.service
+          state: stopped
+
+  - name: Configure PostgreSQL. Set listen_addresses.
+    lineinfile: 
+           path : /etc/postgresql/15/main/postgresql.conf
+           line : "listen_addresses = '*'"
+           state: present
+   
+  - name: Configure PostgreSQL. Set hosts in pg_hba.conf
+    lineinfile:
+         path: /etc/postgresql/15/main/pg_hba.conf
+         regexp: "{{ item.regexp }}"
+         line: "{{ item.line }}"
+         state: present
+    with_items:
+          - { regexp: '^local   all             all                                     peer', line: 'local   all             all                                     trust' }
+          - { regexp: '^host    all             all             127.0.0.1/32            scram-sha-256', line: 'host    all             all             127.0.0.1/32            md5' }
+
+  - name: Start service postresql
+    become: yes
+    service:
+          name: postgresql
+          enabled: yes
+          state: started

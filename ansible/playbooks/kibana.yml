@@ -1,0 +1,28 @@
+- name: Kibana
+  hosts: elk
+  become: yes 
+
+  tasks:
+
+  - name: Install Kibana from a .deb package        
+    ansible.builtin.apt:
+       deb: /tmp/kibana-7.17.8-amd64.deb
+
+  - name: Configure Kibana
+    lineinfile:
+       dest: /etc/kibana/kibana.yml
+       line: '{{ item }}'
+    with_items:
+      - 'server.host: "0.0.0.0"'
+      - 'server.publicBaseUrl: "http://ip:5601/"'
+      - 'elasticsearch.hosts: ["http://ip:9200"]'
+      - 'elasticsearch.username: "elastic"'
+      - 'elasticsearch.password: "password_elasticsearch"'
+      - 'xpack.security.enabled: true'
+
+  - name: Start service Kibana
+    become: yes
+    service:
+          name: kibana
+          enabled: yes
+          state: started

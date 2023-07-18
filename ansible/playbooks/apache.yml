@@ -1,0 +1,33 @@
+- name: Apache
+  hosts: web
+  become: yes
+  vars:
+   ports: 8080
+
+  tasks:
+  - name: Install apache2
+    apt:
+         pkg: apache2
+         state: present
+
+  - name: Stop service apache2
+    become: yes
+    service:
+          name: apache2.service
+          state: stopped
+
+  - name: Configure Apache port
+    lineinfile:
+        path: /etc/apache2/ports.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+    with_items:
+        - { regexp: '^Listen 80', line: 'Listen {{ ports }}' }
+
+  - name: Start service apache2
+    become: yes
+    service:
+          name: apache2
+          enabled: yes
+          state: started
