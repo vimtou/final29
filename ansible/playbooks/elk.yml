@@ -1,0 +1,34 @@
+- name: Elasticsearch
+  hosts: elk
+  become: yes 
+
+  tasks:
+
+  - name: Install Elasticsearch-7.17.8
+    ansible.builtin.apt:
+         deb: /home/vimto/distrib/elasticsearch-7.17.8-amd64.deb
+
+  - name: Configure elasticsearch
+    lineinfile:
+       dest: /etc/elasticsearch/elasticsearch.yml
+       line: '{{ item }}'
+    with_items:
+      - 'network.host: 0.0.0.0'
+      - 'discovery.type: single-node'
+      - 'xpack.security.enabled: true'
+
+  - name: Add memmory to 4Gb
+    lineinfile:
+       create: yes
+       dest: /etc/elasticsearch/jvm.options.d/xms
+       line: '{{ item }}'
+    with_items:
+      - '-Xms4g'
+      - '-Xmx4g'
+
+  - name: Start service elasticsearch
+    become: yes
+    service:
+          name: elasticsearch
+          enabled: yes
+          state: started
